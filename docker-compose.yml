@@ -1,0 +1,36 @@
+version: '3'
+services:
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    restart: always
+    environment:
+      - REDIS_PASSWORD=lav
+  postgres:
+    image: "postgres:alpine"
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/data
+    restart: always
+    environment:
+      - POSTGRES_USER=lav
+      - POSTGRES_PASSWORD=lav
+  consul-agent-1: &consul-agent
+    image: consul:1.5
+    command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
+
+  consul-server-1: &consul-server
+    <<: *consul-agent
+    command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
+  consul-server-bootstrap:
+    <<: *consul-agent
+    ports:
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:8600"
+      - "8600:8600/udp"
+    command: "agent -server -bootstrap-expect 1 -ui -client 0.0.0.0"
